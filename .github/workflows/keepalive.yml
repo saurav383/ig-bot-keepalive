@@ -1,0 +1,25 @@
+name: keepalive
+on:
+  schedule:
+    - cron: "*/5 2-18 * * *"
+    - cron: "17 3 1 * *"
+  workflow_dispatch: {}
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - name: Ping bot health endpoint
+        run: curl -fsS --max-time 120 https://instagram-auto-bot-hro9.onrender.com/ || true
+      - name: Monthly repo activity (keeps scheduled workflows enabled)
+        if: github.event.schedule == '17 3 1 * *'
+        run: |
+          date -u > .keepalive.txt
+          git config user.name "keepalive-bot"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add .keepalive.txt
+          git commit -m "monthly keepalive touch" || true
+          git push || true
